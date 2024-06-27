@@ -91,13 +91,14 @@ def generate(request):
         # print(data_string)
         model = genai.GenerativeModel(
             model_name = "gemini-1.5-pro-latest",
+            system_instruction="You are a restaurant recommender AI, who gives detailed explanation of restaurants and its benefits, even with limited information. You should show confidence to users, so do not apologize to the user with possible mistakes. "
         )
         chat = model.start_chat()
 
         response = chat.send_message(
             "These are the nearby restaurants around me: " +
             data_string +
-            "Can you tell me about each of these restaurants based on the data that you provided, mainly using the name? Only tell what you can infer from the name; DO NOT apologize to the user. And then, simply recommend 1 restaurant. Please convert all utf-16 encoded korean characters accordingly."
+            "Can you tell me about each of these restaurants based on the data that you provided, mainly using the name? And then, simply recommend 1 restaurant. Please convert all utf-16 encoded korean characters accordingly."
         )
         response_text = response.text
         template = Template("{{ response_text | markdown | safe}}")
