@@ -1,0 +1,42 @@
+{% extends 'find/base.html' %}
+{% block body %}
+    <form id="locationForm" method="POST" action="find/">
+        {% csrf_token %}
+        <input type="hidden" name="latitude" id="latitudeInput">
+        <input type="hidden" name="longitude" id="longitudeInput">
+    </form>
+
+    <section id="intro" class="flex flex-row md:flex-col justify-center p-6 items-center mb-12">
+        <h2 class="max-w-4xl text-4xl font-bold text-left md:text-center text-slate-900">
+            Modern <span class="text-indigo-700">Food Recommender</span>
+        </h2>
+        <p class="max-w-md text-2xl mt-4 text-left md:text-center text-slate-700">Smart food recommender that improves your lifestyle</p>
+
+    </section>
+
+    <div class="flex flex-col justify-center items-center space-y-2">
+        <button id="getLocationButton" onclick="getLocation()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full transition transform ease-in-out duration-300 hover:scale-105">Nearby Search</button>
+        <a href="{% url 'recipe' %}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full transition transform ease-in-out duration-300 hover:scale-105">Get Recipe</a>
+        <a href="#" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full transition transform ease-in-out duration-300 hover:scale-105">Planner</a>
+    </div>
+    
+    
+{% endblock %}
+{% block script %}
+    async function getLocation() {
+        if (navigator.geolocation) {
+            await navigator.geolocation.getCurrentPosition(showPosition);
+        } else {
+            alert("Location is not allowed by this browser.")
+        }
+    }
+    async function showPosition(position) {
+        const lat = position.coords.latitude;
+        const long = position.coords.longitude;
+    
+        document.getElementById('latitudeInput').value = lat;
+        document.getElementById('longitudeInput').value = long;
+    
+        document.getElementById('locationForm').submit();
+    }
+{% endblock %}  
