@@ -18,10 +18,10 @@
             <div>
                 <nav class="block space-x-8 text-xl" aira-label="main">
                     {% if not user.is_authenticated %}
-                    <a href="{% provider_login_url 'google' %}" class="hover:opacity-90">Log In with Google</a>
+                    <a href="{% provider_login_url 'google' %}" class="hover:opacity-90">Sign In with Google</a>
                     {% else %}
                     <a href="#" class="hover:opacity-90">Profile</a>
-                    <a href="{% url 'account_logout' %}">Log Out</a>
+                    <a href="{% url 'account_logout' %}">Sign Out</a>
                     {% endif %}
                     
                 </nav>
