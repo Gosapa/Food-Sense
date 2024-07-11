@@ -1,4 +1,4 @@
-{% extends 'find/base.html' %}
+{% extends 'base.html' %}
 {% block body %}
     <form id="locationForm" method="POST" action="find/">
         {% csrf_token %}
@@ -11,7 +11,6 @@
             Modern <span class="text-indigo-700">Food Recommender</span>
         </h2>
         <p class="max-w-md text-2xl mt-4 text-left md:text-center text-slate-700">Smart food recommender that improves your lifestyle</p>
-
     </section>
 
     <div class="flex flex-col justify-center items-center space-y-2">
@@ -19,7 +18,6 @@
         <a href="{% url 'recipe' %}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full transition transform ease-in-out duration-300 hover:scale-105">Get Recipe</a>
         <a href="#" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full transition transform ease-in-out duration-300 hover:scale-105">Planner</a>
     </div>
-    
     
 {% endblock %}
 {% block script %}
