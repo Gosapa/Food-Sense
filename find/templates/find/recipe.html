@@ -1,6 +1,109 @@
 {% extends 'base.html' %}
 {% block body %}
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-4xl text-white text-center">This is page to find recipe.</h1>
+<div class="container mx-auto p-4">
+    <h1 class="text-4xl font-bold text-center mb-8 text-[#000022]">Find any recipe you want!</h1>
+    <div class="flex items-center mb-8">
+        <input type="text" id="recipeInput" placeholder="Type any recipe..." class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+        <button id="sendRecipeButton" onclick="sendRecipe()" class="bg-[#e28413] hover:bg-[#bc7d30] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2">Send</button>
+    </div>
+    <div style="display: none;" id="loading-circle" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"> 
+        <svg width="96" height="96" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><style>.spinner_nOfF{animation:spinner_qtyZ 2s cubic-bezier(0.36,.6,.31,1) infinite}.spinner_fVhf{animation-delay:-.5s}.spinner_piVe{animation-delay:-1s}.spinner_MSNs{animation-delay:-1.5s}@keyframes spinner_qtyZ{0%{r:0}25%{r:3px;cx:4px}50%{r:3px;cx:12px}75%{r:3px;cx:20px}100%{r:0;cx:20px}}</style><circle class="spinner_nOfF" cx="4" cy="12" r="3"/><circle class="spinner_nOfF spinner_fVhf" cx="4" cy="12" r="3"/><circle class="spinner_nOfF spinner_piVe" cx="4" cy="12" r="3"/><circle class="spinner_nOfF spinner_MSNs" cx="4" cy="12" r="3"/></svg>
+    </div>
+
+    <div id="recipe-container" class="mt-4 bg-gray-100 rounded-lg p-4 shadow-md" style="display:none;">
+        <h2 id="title" class="text-2xl font-bold mb-4 text-[#000022]"></h2>
+
+        <div class="mb-4">
+            <h3 class="text-lg font-bold mb-2 text-[#000022]">Ingredients:</h3>
+            <ul id="ingredients-list" class="list-disc list-inside text-[#000022]">
+            </ul>
+        </div>
+
+        <div class="mb-4">
+            <h3 class="text-lg font-bold mb-2 text-[#000022]">Steps:</h3>
+            <div id="result" class="prose prose-lg text-[#000022]"></div>
+        </div>
+
+        <button id="saveRecipeBtn" onclick="saveRecipe()" class="bg-green-500 hover:bg-green-700 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Save Recipe</button>
+    </div>
 </div>
-{% endblock %}
+{% endblock body %}
+
+{% block script %}
+<script>
+    const recipeInput = document.getElementById("recipeInput")
+    const resultDiv = document.getElementById("result");
+    const recipeContainer = document.getElementById("recipe-container");
+    const titleDiv = document.getElementById("title");
+    const ingredientsList = document.getElementById("ingredients-list");
+    const saveRecipeBtn = document.getElementById("saveRecipeBtn");
+
+    async function sendRecipe(){
+        const message = recipeInput.value.trim();
+        if (message === "") {
+            return;
+        }
+        food = message
+        recipeInput.value = ""
+        document.getElementById("loading-circle").style.display = 'block';
+        recipeContainer.style.display = "none";
+        const endpointURL = '{% url "generateRecipe" %}'
+        try {
+            const response = await fetch(endpointURL, {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({'item': message})
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log(data);
+
+                document.getElementById("loading-circle").style.display = 'none';
+                recipeContainer.style.display = "block";
+                titleDiv.textContent = data.response.name;
+
+                // Clear previous ingredients
+                ingredientsList.innerHTML = ''; 
+
+                data.response.ingredients.forEach(ingredient => {
+                    const li = document.createElement("li");
+                    li.textContent = ingredient;
+                    ingredientsList.appendChild(li);
+                });
+                resultDiv.innerHTML = data.response.steps;
+            } else {
+                console.error("Error sending message:", response.status);
+            }
+        } catch (error) {
+            console.error("Error occurred:", error);
+        } 
+
+    }
+    async function saveRecipe() {
+        const endpointURL = '{% url "save_favorite" %}'
+        try {
+            const response = await fetch(endpointURL, {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({'item': document.getElementById("title").innerHTML, 'ingredients': document.getElementById('ingredients-list').innerHTML,'description': document.getElementById("result").innerHTML})
+            });
+
+            if (response.ok) {
+                console.log("Recipe saved to favorites!");
+                // You might want to add some feedback to the user here (e.g., a message)
+            } else {
+                console.error("Error saving recipe:", response.status);
+            }
+        } catch (error) {
+            console.error("Error occurred:", error);
+        }
+    }
+</script>
+{% endblock script %}

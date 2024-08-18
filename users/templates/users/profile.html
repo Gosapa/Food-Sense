@@ -1,7 +1,65 @@
 {% extends 'base.html' %}
 {% block body %}
-<h1 class="text-4xl">HELLO</h1>
-<h2 class="text-2xl">{{ user.first_name }}</h2>
-<h2 class="text-2xl">{{ user.last_name }}</h2>
-<h2 class="text-2xl">{{ profile.age }}</h2>
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-4xl font-bold text-center mb-8 text-[#000022]">Your Profile</h1>
+
+    <div class="bg-white rounded-lg shadow-md p-8">
+        <h2 class="text-2xl font-bold mb-4 text-[#000022]">
+            {{ user.first_name }} {{ user.last_name }}
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex flex-col mb-4">
+                <label class="text-gray-700 font-bold mb-1">Age:</label>
+                <p class="text-lg font-normal text-gray-900">{{ profile.age }}</p>
+            </div>
+            <div class="flex flex-col mb-4">
+                <label class="text-gray-700 font-bold mb-1">Height (cm):</label>
+                <p class="text-lg font-normal text-gray-900">{{ profile.height }}</p>
+            </div>
+            <div class="flex flex-col mb-4">
+                <label class="text-gray-700 font-bold mb-1">Weight (kg):</label>
+                <p class="text-lg font-normal text-gray-900">{{ profile.weight }}</p>
+            </div>
+            <div class="flex flex-col mb-4">
+                <label class="text-gray-700 font-bold mb-1">Diseases:</label>
+                <ul class="text-gray-900 list-disc">
+                    {% if profile.diseases %}
+                        {% for disease in profile.diseases %}
+                            <li>{{ disease }}</li>
+                        {% endfor %}
+                    {% else %}
+                        <li>No diseases recorded</li>
+                    {% endif %}
+                </ul>
+            </div>
+            <div class="flex flex-col mb-4">
+                <label class="text-gray-700 font-bold mb-1">Allergies:</label>
+                <ul class="text-gray-900 list-disc">
+                    {% if profile.allergies %}
+                        {% for allergy in profile.allergies %}
+                            <li>{{ allergy }}</li>
+                        {% endfor %}
+                    {% else %}
+                        <li>No allergies recorded</li>
+                    {% endif %}
+                </ul>
+            </div>
+            <!--
+            <div class="flex flex-col">
+                <label class="text-gray-700 font-medium mb-1">Favorites:</label>
+                <ul class="text-gray-900 list-disc">
+                    {% for favorite in profile.favorites %}
+                        <li>{{ favorite }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            -->
+        </div>
+
+        <a href="{% url 'users:edit_profile' %}" class="mt-4 inline-block bg-[#e28413] hover:bg-[#bc7d30] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+            Edit Profile
+        </a>
+    </div>
+</div>
 {% endblock body %}

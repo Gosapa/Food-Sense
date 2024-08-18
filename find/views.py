@@ -1,10 +1,12 @@
-from django.template import Template, Context
-from django.template.defaultfilters import safe
+from .markdownRenderer import md_to_html
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 import googlemaps
+from gemini.functions import *
+from django.contrib.auth.decorators import login_required
 from foodapp.settings import GOOGLE_API_KEY, GOOGLE_AI_KEY
 import requests
+from users.models import Profile, Favorite
 import json
 import google.generativeai as genai
 
@@ -18,51 +20,56 @@ def index(request):
 
 def find(request):
     if request.method == "POST":
-        latitude = request.POST.get("latitude")
-        longitude = request.POST.get("longitude")
-        url = "https://places.googleapis.com/v1/places:searchNearby"
-        myHeader = {
-            'Content-Type': 'application/json',
-            'X-Goog-Api-Key': GOOGLE_API_KEY,
-            'X-Goog-FieldMask': 'places.displayName,places.id,places.types,places.formattedAddress'
-        }
-        myBody = {
-            'includedTypes': ['restaurant'],
-            'maxResultCount': 5,
-            'locationRestriction': {
-                'circle': {
-                    'center': {
-                        'latitude': latitude,
-                        'longitude': longitude,
-                    },
-                    'radius': 500.0
-                }
-            },
-            'rankPreference': 'DISTANCE'
-        }
-        result = requests.post(url, json=myBody, headers=myHeader).json()
-        # print(type(result)) // DICTIONARY
-        # print(result)
-        places = []
-        for restaurant in result['places']:
-            new_data = {
-                'displayName': restaurant['displayName']['text'],
-                'address': restaurant['formattedAddress'],
-                'types':  restaurant['types'],
-            }
-            places.append(new_data)
-            # add code here!
-            # print(f"Name: {restaurant['displayName']['text']}")
-            # print(f"Address: {restaurant['formattedAddress']}")
-            # print(f"Types: {restaurant['types']}")
-            # print("-" * 20)
+        try:
+            profile = Profile.objects.get(user=request.user)
 
-        context = {
-            "latitude": latitude,
-            "longitude": longitude,
-            "places": places,
-        }
-        return render(request, "find/find.html", context)
+            latitude = request.POST.get("latitude")
+            longitude = request.POST.get("longitude")
+            url = "https://places.googleapis.com/v1/places:searchNearby"
+            myHeader = {
+                'Content-Type': 'application/json',
+                'X-Goog-Api-Key': GOOGLE_API_KEY,
+                'X-Goog-FieldMask': 'places.displayName,places.id,places.types,places.formattedAddress'
+            }
+            myBody = {
+                'includedTypes': ['restaurant'],
+                'maxResultCount': 10,
+                'locationRestriction': {
+                    'circle': {
+                        'center': {
+                            'latitude': latitude,
+                            'longitude': longitude,
+                        },
+                        'radius': 500.0
+                    }
+                },
+                'rankPreference': 'DISTANCE'
+            }
+            result = requests.post(url, json=myBody, headers=myHeader).json()
+            # print(type(result)) // DICTIONARY
+            # print(result)
+            places = []
+            for restaurant in result['places']:
+                new_data = {
+                    'displayName': restaurant['displayName']['text'],
+                    'address': restaurant['formattedAddress'],
+                    'types':  restaurant['types'],
+                }
+                places.append(new_data)
+                
+                # print(f"Name: {restaurant['displayName']['text']}")
+                # print(f"Address: {restaurant['formattedAddress']}")
+                # print(f"Types: {restaurant['types']}")
+                # print("-" * 20)
+
+            context = {
+                "latitude": latitude,
+                "longitude": longitude,
+                "places": places,
+            }
+            return render(request, "find/find.html", context)
+        except Profile.DoesNotExist:
+            return redirect('users:createProfile')
         # nearby_restaurants = gmaps.places_nearby(
         #     location=(latitude, longitude),
         #     radius = 5000,
@@ -86,29 +93,60 @@ def find(request):
     
 def generate(request):
     if request.method == 'POST':
+        profile = Profile.objects.get(user=request.user)
         data = json.loads(request.body.decode('utf-8'))
-        data_string = json.dumps(data)
-        # print(data_string)
-        model = genai.GenerativeModel(
-            model_name = "gemini-1.5-pro-latest",
-            system_instruction="You are a restaurant recommender AI, who gives detailed explanation of restaurants and its benefits, even with limited information. You should show confidence to users, so do not apologize to the user with possible mistakes. "
-        )
-        chat = model.start_chat()
-
-        response = chat.send_message(
-            "These are the nearby restaurants around me: " +
-            data_string +
-            "Can you tell me about each of these restaurants based on the data that you provided, mainly using the name? And then, simply recommend 1 restaurant. Please convert all utf-16 encoded korean characters accordingly."
-        )
-        response_text = response.text
-        template = Template("{{ response_text | markdown | safe}}")
-        # print(response.text)
-        context = Context({'response_text': response_text})
-        response_html = template.render(context)
-        # print(response_html)
-        return JsonResponse({'response': response_html}, safe=False)
+        response = generate_recommendation(data, profile)
+        return JsonResponse({'response': md_to_html(response)}, safe=False)
     else:
-        return JsonResponse({'message': 'Invalid Resposne Method'})
+        return JsonResponse({'message': 'Invalid request Method'}, status=400)
 
 def recipe(request):
     return render(request, 'find/recipe.html')
+
+def generateRecipe(request):
+    if request.method == 'POST':
+        profile = Profile.objects.get(user=request.user)
+        data = json.loads(request.body)
+        item = data['item']
+        response = json.loads(generate_recipe(item, profile))
+        response['steps'] = md_to_html(response['steps'])
+        return JsonResponse({"response": response}, safe=False)
+    else:
+        return JsonResponse({"message": "Invalid request method"}, status=400)
+    
+@login_required
+def save_favorite(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            entry = Favorite()
+            entry.user = request.user
+            entry.name = data.get('item')
+            entry.ingredients = data.get('ingredients')
+            entry.steps = data.get('steps')
+            entry.save()
+            return JsonResponse({'message': 'Recipe saved to favorites!'})
+
+        except Profile.DoesNotExist:
+            return JsonResponse({'message': 'Profile not found.'}, status=404)
+
+    return JsonResponse({'message': 'Invalid request method.'}, status=405)
+
+@login_required
+def findIngredient(request):
+    return render(request, "find/ingredients.html")
+
+@login_required
+def ingredientRecipe(request):
+    if request.method == 'POST':
+        profile = Profile.objects.get(user=request.user)
+        data = json.loads(request.body)
+        ingredients = data['ingredients']
+        print(ingredients)
+        print(len(ingredients))
+        response = json.loads(generate_ingredient_recipe(ingredients, profile))
+        response['steps'] = md_to_html(response['steps'])
+        
+        return JsonResponse({"response": response}, safe=False)
+    else:
+        return JsonResponse({"message": "Invalid request method"}, status=400)

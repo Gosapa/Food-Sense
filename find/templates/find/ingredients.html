@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+{% block body %}
+<div class="container mx-auto p-4">
+    <h1 class="text-4xl font-bold text-center mb-8 text-[#000022]">Find Recipes by Ingredients</h1>
+
+    <div class="mb-4">
+        <div class="flex items-center">
+            <input type="text" id="new-ingredient" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2" placeholder="Enter an ingredient">
+            <button id="addIngredient" onclick="addIngredient()" class="bg-[#e28413] hover:bg-[#bc7d30] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Add</button>
+        </div>
+    </div>
+
+    <div class="flex flex-col items-center mt-4"> 
+        <ul id="ingredient-list" class="list-disc list-inside">
+            <!-- Added Ingredients will be added here -->
+        </ul>
+    </div>
+
+    <div class="flex justify-center mt-4"> 
+        <button id="submitIngredients" onclick="submitIngredients()" class="bg-[#e28413] hover:bg-[#bc7d30] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Submit</button>
+    </div>
+
+    <div style="display: none;" id="loading-circle" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"> 
+        <svg width="48" height="48" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><style>.spinner_nOfF{animation:spinner_qtyZ 2s cubic-bezier(0.36,.6,.31,1) infinite}.spinner_fVhf{animation-delay:-.5s}.spinner_piVe{animation-delay:-1s}.spinner_MSNs{animation-delay:-1.5s}@keyframes spinner_qtyZ{0%{r:0}25%{r:3px;cx:4px}50%{r:3px;cx:12px}75%{r:3px;cx:20px}100%{r:0;cx:20px}}</style><circle class="spinner_nOfF" cx="4" cy="12" r="3"/><circle class="spinner_nOfF spinner_fVhf" cx="4" cy="12" r="3"/><circle class="spinner_nOfF spinner_piVe" cx="4" cy="12" r="3"/><circle class="spinner_nOfF spinner_MSNs" cx="4" cy="12" r="3"/></svg>
+    </div>
+
+    <div id="recipe-container" class="mt-4 bg-gray-100 rounded-lg p-4 shadow-md" style="display:none;">
+        <h2 id="title" class="text-2xl font-bold mb-4 text-[#000022]"></h2>
+
+        <div class="mb-4">
+            <h3 class="text-lg font-bold mb-2 text-[#000022]">Ingredients:</h3>
+            <ul id="ingredients-list" class="list-disc list-inside text-[#000022]">
+            </ul>
+        </div>
+
+        <div class="mb-4">
+            <h3 class="text-lg font-bold mb-2 text-[#000022]">Steps:</h3>
+            <div id="result" class="prose prose-lg text-[#000022]"></div>
+        </div>
+
+        <button id="saveRecipeBtn" onclick="saveRecipe()" class="bg-green-500 hover:bg-green-700 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Save Recipe</button>
+    </div>
+
+</div>
+{% endblock body %}
+{% block script %}
+<script>
+    const ingredientInput = document.getElementById("new-ingredient");
+    const ingredientList = document.getElementById("ingredient-list");
+    const resultDiv = document.getElementById("result");
+    const recipeContainer = document.getElementById("recipe-container");
+    const titleDiv = document.getElementById("title");
+    const ingredientsList = document.getElementById("ingredients-list");
+    const saveRecipeBtn = document.getElementById("saveRecipeBtn");
+    const loading = document.getElementById("loading-circle")
+    const submitIngredientsBtn = document.getElementById("submitIngredients")
+
+    let allIngredients = [];
+
+    function addIngredient() {
+        const newIngredient = ingredientInput.value.trim();
+        if (newIngredient !== "") {
+            const listItem = document.createElement("li");
+            listItem.setAttribute("id", `tag-${newIngredient}`);
+            listItem.innerHTML = `
+                <span class="mr-2">${newIngredient}</span>
+                <button onclick="deleteTag('${newIngredient}')" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded transition duration-300 ml-auto hover:opacity-90"> 
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            `;
+            ingredientList.appendChild(listItem);
+            ingredientInput.value = "";
+            allIngredients.push(newIngredient);
+        }
+    }
+
+    function deleteTag(tagId) {
+        const listItem = document.getElementById(`tag-${tagId}`);
+        if (listItem) {
+            listItem.remove();
+            // Remove the ingredient from the array
+            allIngredients = allIngredients.filter(item => item !== tagId);
+        }
+    }
+
+    function submitIngredients() {
+        if (allIngredients.length > 0) {
+            const endpointURL = "{% url 'ingredientRecipe' %}";
+            const payload = {
+                "ingredients": allIngredients
+            };
+            loading.style.display = 'block';
+            recipeContainer.style.display = "none";
+            submitIngredientsBtn.disabled = true;
+            // Send POST data with the list, and console.log the response. 
+            fetch(endpointURL, {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data); 
+                recipeContainer.style.display = "block";
+                titleDiv.textContent = data.response.name;
+
+                // Clear previous ingredients
+                ingredientsList.innerHTML = ''; 
+
+                data.response.ingredients.forEach(ingredient => {
+                    const li = document.createElement("li");
+                    li.textContent = ingredient;
+                    ingredientsList.appendChild(li);
+                });
+                resultDiv.innerHTML = data.response.steps;
+            })
+            .catch(error => {
+                console.error("Error submitting ingredients:", error);
+            })
+            .finally(() => { 
+                loading.style.display = 'none';
+                submitIngredientsBtn.disabled = false;
+            });
+        }
+    }
+
+    async function saveRecipe() {
+        const endpointURL = '{% url "save_favorite" %}'
+        try {
+            const response = await fetch(endpointURL, {
+                method: 'POST',
+                headers: {
+                    "Content-Type": "application/json",
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({'item': document.getElementById("title").innerHTML, 'ingredients': document.getElementById('ingredients-list').innerHTML,'steps': document.getElementById("result").innerHTML})
+            });
+
+            if (response.ok) {
+                console.log("Recipe saved to favorites!");
+                alert("Recipe saved to favorites!");
+                saveRecipeBtn.disabled = true;
+                // You might want to add some feedback to the user here (e.g., a message)
+            } else {
+                console.error("Error saving recipe:", response.status);
+            }
+        } catch (error) {
+            console.error("Error occurred:", error);
+        }
+    }
+    document.getElementById("new-ingredient").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            addIngredient();
+        }
+    });
+</script>
+{% endblock script %}

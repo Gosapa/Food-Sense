@@ -1,82 +1,87 @@
 {% extends 'base.html' %}
 {% block body %}
-<div class="flex flex-row justify-center w-full text-black">
+<div class="text-black w-full flex flex-row justify-center">
     <div class="w-full max-w-md">
         <form method="POST" class="bg-violet-200 shadow-md rounded px-8 pt-6 pb-8 mb-4">
             {% csrf_token %}
+
             <div class="mb-4">
                 {{ form.age.label_tag }}
                 {{ form.age }}
             </div>
-            
+
             <div class="mb-4">
-                {{ form.height.label_tag }} <p class="text-lg">(cm)</p>
+                {{ form.height.label_tag }}
                 {{ form.height }}
             </div>
-            
+
             <div class="mb-4">
-                {{ form.weight.label_tag }} <p class="text-lg">(kg)</p>
+                {{ form.weight.label_tag }}
                 {{ form.weight }}
             </div>
-            
+
             <div class="mb-4">
                 <label for="id_diseases" class="block text-gray-700 text-sm font-bold mb-2">Diseases:</label>
                 <div id="disease-tags" class="flex flex-wrap gap-2">
                     <div class="flex flex-col gap-2" id="predefined-diseases">
-                        {% for disease in predefined_diseases %}
+                        {% for disease in profile.diseases %}
                             <div class="flex items-center" id="disease-{{ disease }}">
-                                <input id="disease-{{ disease }}" type="checkbox" class="mr-2" name="diseases" checked> 
+                                <input id="disease-{{ disease }}" type="checkbox" class="mr-2" name="diseases" checked>
                                 <label for="disease-{{ disease }}" class="text-gray-700 text-sm">{{ disease }}</label>
-                                <button type="button" onclick="deleteTag('disease-{{ disease }}')" class="bg-red-500 hover:bg-red-700 text-white text-xs py-1 px-2 rounded transition duration-300 ml-2">Delete</button>
+                                <button type="button" onclick="deleteTag('disease-{{ disease }}')" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded transition duration-300 ml-2">Delete</button>
                             </div>
                         {% endfor %}
                     </div>
-                    <div class="flex flex-col gap-2" id="custom-diseases"></div>
+                    <div class="flex flex-wrap gap-2" id="custom-diseases"></div>
                 </div>
                 <input type="text" id="new-disease" placeholder="Add new disease" class="border rounded px-3 py-2">
-                <button type="button" onclick="addDiseaseTag()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300">Add</button>
-                
+                <button type="button" onclick="addDiseaseTag()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Add</button>
             </div>
 
             <div class="mb-4">
                 <label for="id_allergies" class="block text-gray-700 text-sm font-bold mb-2">Allergies:</label>
                 <div id="allergy-tags" class="flex flex-wrap gap-2">
                     <div class="flex flex-col gap-2" id="predefined-allergies">
-                        {% for allergy in predefined_allergies %}
+                        {% for allergy in profile.allergies %}
                             <div class="flex items-center" id="allergy-{{ allergy }}">
                                 <input id="allergy-{{ allergy }}" type="checkbox" class="mr-2" name="allergies" checked>
                                 <label for="allergy-{{ allergy }}" class="text-gray-700 text-sm">{{ allergy }}</label>
-                                <button type="button" onclick="deleteTag('allergy-{{ allergy }}')" class="bg-red-500 hover:bg-red-700 text-white text-xs py-1 px-2 rounded transition duration-300 ml-2">Delete</button>
+                                <button type="button" onclick="deleteTag('allergy-{{ allergy }}')" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded transition duration-300 ml-2">Delete</button>
                             </div>
                         {% endfor %}
                     </div>
+                    <div class="flex flex-wrap gap-2" id="custom-allergies"></div>
                 </div>
                 <input type="text" id="new-allergy" placeholder="Add new allergy" class="border rounded px-3 py-2">
-                <button type="button" onclick="addAllergyTag()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300">Add</button>
+                <button type="button" onclick="addAllergyTag()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Add</button>
             </div>
+
             <!--
             <div class="mb-4">
                 <label for="id_favorites" class="block text-gray-700 text-sm font-bold mb-2">Favorites:</label>
                 <div id="favorite-tags" class="flex flex-wrap gap-2">
-                    <div class="flex flex-col gap-2" id="predefined-favorites">
-                        {% for favorite in predefined_favorites %}
+                    <div class="flex flex-wrap gap-2" id="predefined-favorites">
+                        {% for favorite in profile.favorites %}
                             <div class="flex items-center" id="favorite-{{ favorite }}">
                                 <input id="favorite-{{ favorite }}" type="checkbox" class="mr-2" name="favorites" checked>
                                 <label for="favorite-{{ favorite }}" class="text-gray-700 text-sm">{{ favorite }}</label>
-                                <button type="button" onclick="deleteTag('favorite-{{ favorite }}')" class="bg-red-500 hover:bg-red-700 text-white text-xs py-1 px-2 rounded transition duration-300 ml-2">Delete</button>
+                                <button type="button" onclick="deleteTag('favorite-{{ favorite }}')" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded transition duration-300 ml-2">Delete</button>
                             </div>
                         {% endfor %}
                     </div>
+                    <div class="flex flex-wrap gap-2" id="custom-favorites"></div>
                 </div>
                 <input type="text" id="new-favorite" placeholder="Add new favorite" class="border rounded px-3 py-2">
-                <button type="button" onclick="addFavoriteTag()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300">Add</button>
+                <button type="button" onclick="addFavoriteTag()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Add</button>
             </div>
             -->
 
+            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Save Changes</button>
         </form>
     </div>
 </div>
 {% endblock body %}
+
 {% block script %}
 <script>
     const customDiseasesDiv = document.getElementById("predefined-diseases");
@@ -90,12 +95,13 @@
             newDiseaseElement.innerHTML = `
                 <input type="checkbox" id="disease-${newDisease}" name="diseases" value="${newDisease}" class="mr-2" checked>
                 <label for="disease-${newDisease}" class="text-gray-700 text-sm">${newDisease}</label>
-                <button type="button" onclick="deleteTag('disease-${newDisease}')" class="bg-red-500 hover:bg-red-700 text-white text-xs py-1 px-2 rounded transition duration-300 ml-2">Delete</button>
+                <button type="button" onclick="deleteTag('disease-${newDisease}')" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded transition duration-300 ml-2">Delete</button>
             `;
             customDiseasesDiv.appendChild(newDiseaseElement);
             document.getElementById("new-disease").value = "";
         }
     }
+
 
     // Allergies
     const customAllergyDiv = document.getElementById("predefined-allergies");
@@ -108,14 +114,17 @@
             newAllergyElement.innerHTML = `
                 <input type="checkbox" id="allergy-${newAllergy}" name="allergies" value="${newAllergy}" class="mr-2" checked>
                 <label for="allergy-${newAllergy}" class="text-gray-700 text-sm">${newAllergy}</label>
-                <button type="button" onclick="deleteTag('allergy-${newAllergy}')" class="bg-red-500 hover:bg-red-700 text-white text-xs py-1 px-2 rounded transition duration-300 ml-2">Delete</button>
+                <button type="button" onclick="deleteTag('allergy-${newAllergy}')" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded transition duration-300 ml-2">Delete</button>
             `;
             customAllergyDiv.appendChild(newAllergyElement);
             document.getElementById("new-allergy").value = "";
         }
     }
+
+
     /*
-    const customFavoriteDiv = document.getElementById("predefined-favorites");
+    // Favorites
+    const customFavoriteDiv = document.getElementById("custom-favorites");
     function addFavoriteTag() {
         const newFavorite = document.getElementById("new-favorite").value.trim();
         if (newFavorite !== "") {
@@ -123,15 +132,15 @@
             newFavoriteElement.classList.add("flex", "items-center");
             newFavoriteElement.setAttribute('id', `favorite-${newFavorite}`);
             newFavoriteElement.innerHTML = `
-                <input type="checkbox" id="favorite-${newFavorite}" name="favorites" value="${newFavorite}" class="mr-2" checked>
+                <input type="checkbox" id="favorite-${newFavorite}" name="favorites" value="${newFavorite}" class="mr-2">
                 <label for="favorite-${newFavorite}" class="text-gray-700 text-sm">${newFavorite}</label>
-                <button type="button" onclick="deleteTag('favorite-${newFavorite}')" class="bg-red-500 hover:bg-red-700 text-white text-xs py-1 px-2 rounded transition duration-300 ml-2">Delete</button>
+                <button type="button" onclick="deleteTag('favorite-${newFavorite}')" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded transition duration-300 ml-2">Delete</button>
             `;
             customFavoriteDiv.appendChild(newFavoriteElement);
             document.getElementById("new-favorite").value = "";
         }
     }
-    */
+        */
 
 
     // Generalized delete function for both diseases and allergies
@@ -150,6 +159,11 @@
     document.getElementById("new-allergy").addEventListener("keypress", function(event) {
         if (event.key === "Enter") {
             addAllergyTag();
+        }
+    });
+    document.getElementById("new-favorite").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            addFavoriteTag();
         }
     });
 </script>
