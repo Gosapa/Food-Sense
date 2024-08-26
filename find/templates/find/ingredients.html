@@ -2,6 +2,7 @@
 {% block body %}
 <div class="container mx-auto p-4">
     <h1 class="text-4xl font-bold text-center mb-8 text-[#000022]">Find Recipes by Ingredients</h1>
+    <p class="text-gray-600 text-lg mb-4 text-center">Enter your ingredients, and let our AI find delicious recipes using what you have on hand!</p>
 
     <div class="mb-4">
         <div class="flex items-center">
@@ -128,7 +129,7 @@
     }
 
     async function saveRecipe() {
-        const endpointURL = '{% url "save_favorite" %}'
+        const endpointURL = '{% url "users:save_favorite" %}'
         try {
             const response = await fetch(endpointURL, {
                 method: 'POST',

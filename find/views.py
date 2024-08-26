@@ -15,61 +15,59 @@ genai.configure(api_key=GOOGLE_AI_KEY)
 
 # Create your views here.
 
+
 def index(request):
     return render(request, "find/index.html")
 
+@login_required
 def find(request):
     if request.method == "POST":
-        try:
-            profile = Profile.objects.get(user=request.user)
 
-            latitude = request.POST.get("latitude")
-            longitude = request.POST.get("longitude")
-            url = "https://places.googleapis.com/v1/places:searchNearby"
-            myHeader = {
-                'Content-Type': 'application/json',
-                'X-Goog-Api-Key': GOOGLE_API_KEY,
-                'X-Goog-FieldMask': 'places.displayName,places.id,places.types,places.formattedAddress'
-            }
-            myBody = {
-                'includedTypes': ['restaurant'],
-                'maxResultCount': 10,
-                'locationRestriction': {
-                    'circle': {
-                        'center': {
-                            'latitude': latitude,
-                            'longitude': longitude,
-                        },
-                        'radius': 500.0
-                    }
-                },
-                'rankPreference': 'DISTANCE'
-            }
-            result = requests.post(url, json=myBody, headers=myHeader).json()
-            # print(type(result)) // DICTIONARY
-            # print(result)
-            places = []
-            for restaurant in result['places']:
-                new_data = {
-                    'displayName': restaurant['displayName']['text'],
-                    'address': restaurant['formattedAddress'],
-                    'types':  restaurant['types'],
+        latitude = request.POST.get("latitude")
+        longitude = request.POST.get("longitude")
+        url = "https://places.googleapis.com/v1/places:searchNearby"
+        myHeader = {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': GOOGLE_API_KEY,
+            'X-Goog-FieldMask': 'places.displayName,places.id,places.types,places.formattedAddress'
+        }
+        myBody = {
+            'includedTypes': ['restaurant'],
+            'maxResultCount': 10,
+            'locationRestriction': {
+                'circle': {
+                    'center': {
+                        'latitude': latitude,
+                        'longitude': longitude,
+                    },
+                    'radius': 500.0
                 }
-                places.append(new_data)
-                
-                # print(f"Name: {restaurant['displayName']['text']}")
-                # print(f"Address: {restaurant['formattedAddress']}")
-                # print(f"Types: {restaurant['types']}")
-                # print("-" * 20)
-
-            context = {
-                "latitude": latitude,
-                "longitude": longitude,
-                "places": places,
+            },
+            'rankPreference': 'DISTANCE'
+        }
+        result = requests.post(url, json=myBody, headers=myHeader).json()
+        # print(type(result)) // DICTIONARY
+        # print(result)
+        places = []
+        for restaurant in result['places']:
+            new_data = {
+                'displayName': restaurant['displayName']['text'],
+                'address': restaurant['formattedAddress'],
+                'types':  restaurant['types'],
             }
-            return render(request, "find/find.html", context)
-        except Profile.DoesNotExist:
-            return redirect('users:createProfile')
+            places.append(new_data)
+            
+            # print(f"Name: {restaurant['displayName']['text']}")
+            # print(f"Address: {restaurant['formattedAddress']}")
+            # print(f"Types: {restaurant['types']}")
+            # print("-" * 20)
+
+        context = {
+            "latitude": latitude,
+            "longitude": longitude,
+            "places": places,
+        }
+        return render(request, "find/find.html", context)
         # nearby_restaurants = gmaps.places_nearby(
         #     location=(latitude, longitude),
         #     radius = 5000,
@@ -91,50 +89,43 @@ def find(request):
     else:
         return redirect('index')
     
+@login_required
 def generate(request):
     if request.method == 'POST':
-        profile = Profile.objects.get(user=request.user)
         data = json.loads(request.body.decode('utf-8'))
-        response = generate_recommendation(data, profile)
+        response = generate_recommendation(data)
         return JsonResponse({'response': md_to_html(response)}, safe=False)
     else:
         return JsonResponse({'message': 'Invalid request Method'}, status=400)
 
+@login_required
 def recipe(request):
-    return render(request, 'find/recipe.html')
+    try:
+        profile = Profile.objects.get(user=request.user)
+        return render(request, 'find/recipe.html')
+    except Profile.DoesNotExist:
+        return redirect('users:createProfile')
 
+@login_required
 def generateRecipe(request):
     if request.method == 'POST':
         profile = Profile.objects.get(user=request.user)
         data = json.loads(request.body)
         item = data['item']
         response = json.loads(generate_recipe(item, profile))
-        response['steps'] = md_to_html(response['steps'])
-        return JsonResponse({"response": response}, safe=False)
+        # response['steps'] = md_to_html(response['steps'])
+        return JsonResponse({"response": response})
     else:
         return JsonResponse({"message": "Invalid request method"}, status=400)
     
-@login_required
-def save_favorite(request):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body.decode('utf-8'))
-            entry = Favorite()
-            entry.user = request.user
-            entry.name = data.get('item')
-            entry.ingredients = data.get('ingredients')
-            entry.steps = data.get('steps')
-            entry.save()
-            return JsonResponse({'message': 'Recipe saved to favorites!'})
-
-        except Profile.DoesNotExist:
-            return JsonResponse({'message': 'Profile not found.'}, status=404)
-
-    return JsonResponse({'message': 'Invalid request method.'}, status=405)
 
 @login_required
 def findIngredient(request):
-    return render(request, "find/ingredients.html")
+    try:
+        profile = Profile.objects.get(user=request.user)
+        return render(request, "find/ingredients.html")
+    except Profile.DoesNotExist:
+        return redirect('users:createProfile')
 
 @login_required
 def ingredientRecipe(request):
@@ -142,10 +133,8 @@ def ingredientRecipe(request):
         profile = Profile.objects.get(user=request.user)
         data = json.loads(request.body)
         ingredients = data['ingredients']
-        print(ingredients)
-        print(len(ingredients))
         response = json.loads(generate_ingredient_recipe(ingredients, profile))
-        response['steps'] = md_to_html(response['steps'])
+        # response['steps'] = md_to_html(response['steps'])
         
         return JsonResponse({"response": response}, safe=False)
     else:

@@ -1,23 +1,27 @@
 {% extends 'base.html' %}
 {% block body %}
-<div class="text-black w-full flex flex-row justify-center">
-    <div class="w-full max-w-md">
-        <form method="POST" class="bg-violet-200 shadow-md rounded px-8 pt-6 pb-8 mb-4">
+{{ profile.diseases | json_script:"disease_data" }}
+{{ profile.allergies | json_script:"allergies_data" }}
+<div class="container mx-auto p-4">
+    <h1 class="text-4xl font-bold text-center mb-8 text-[#000022]">Edit Your Profile</h1>
+    
+    <div class="bg-white rounded-lg shadow-md p-8">
+        <form method="POST" class="bg-white rounded-lg shadow-md p-8">
             {% csrf_token %}
 
             <div class="mb-4">
-                {{ form.age.label_tag }}
-                {{ form.age }}
+                <label for="id_age" class="block text-gray-700 text-sm font-bold mb-2">Age:</label>
+                <input type="number" id="id_age" name="age" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="{{ form.age.value|default_if_none:'' }}" required>
             </div>
 
             <div class="mb-4">
-                {{ form.height.label_tag }}
-                {{ form.height }}
+                <label for="id_height" class="block text-gray-700 text-sm font-bold mb-2">Height (cm):</label>
+                <input type="number" id="id_height" name="height" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="{{ form.height.value|default_if_none:'' }}" required>
             </div>
 
             <div class="mb-4">
-                {{ form.weight.label_tag }}
-                {{ form.weight }}
+                <label for="id_weight" class="block text-gray-700 text-sm font-bold mb-2">Weight (kg):</label>
+                <input type="number" id="id_weight" name="weight" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="{{ form.weight.value|default_if_none:'' }}" required>
             </div>
 
             <div class="mb-4">
@@ -26,34 +30,35 @@
                     <div class="flex flex-col gap-2" id="predefined-diseases">
                         {% for disease in profile.diseases %}
                             <div class="flex items-center" id="disease-{{ disease }}">
-                                <input id="disease-{{ disease }}" type="checkbox" class="mr-2" name="diseases" checked>
+                                <input type="checkbox" id="disease-{{ disease }}" name="diseases" value="{{ disease }}" class="mr-2" checked> 
                                 <label for="disease-{{ disease }}" class="text-gray-700 text-sm">{{ disease }}</label>
-                                <button type="button" onclick="deleteTag('disease-{{ disease }}')" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded transition duration-300 ml-2">Delete</button>
+                                <button type="button" onclick="deleteTag('disease-{{ disease }}')" class="bg-red-500 hover:bg-red-700 text-white text-xs py-1 px-2 rounded transition duration-300 ml-2">Delete</button>
                             </div>
                         {% endfor %}
                     </div>
-                    <div class="flex flex-wrap gap-2" id="custom-diseases"></div>
+                    <div class="flex flex-col gap-2" id="custom-diseases"></div>
                 </div>
                 <input type="text" id="new-disease" placeholder="Add new disease" class="border rounded px-3 py-2">
-                <button type="button" onclick="addDiseaseTag()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Add</button>
+                <button type="button" onclick="addDiseaseTag()" class="bg-[#e28413] hover:bg-[#bc7d30] text-white font-bold py-2 px-4 rounded">Add</button>
+                
             </div>
-
+           
             <div class="mb-4">
                 <label for="id_allergies" class="block text-gray-700 text-sm font-bold mb-2">Allergies:</label>
                 <div id="allergy-tags" class="flex flex-wrap gap-2">
                     <div class="flex flex-col gap-2" id="predefined-allergies">
                         {% for allergy in profile.allergies %}
                             <div class="flex items-center" id="allergy-{{ allergy }}">
-                                <input id="allergy-{{ allergy }}" type="checkbox" class="mr-2" name="allergies" checked>
+                                <input type="checkbox" id="allergy-{{ allergy }}" name="allergies" value="{{ allergy }}" class="mr-2" checked>
                                 <label for="allergy-{{ allergy }}" class="text-gray-700 text-sm">{{ allergy }}</label>
-                                <button type="button" onclick="deleteTag('allergy-{{ allergy }}')" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded transition duration-300 ml-2">Delete</button>
+                                <button type="button" onclick="deleteTag('allergy-{{ allergy }}')" class="bg-red-500 hover:bg-red-700 text-white text-xs py-1 px-2 rounded transition duration-300 ml-2">Delete</button>
                             </div>
                         {% endfor %}
                     </div>
-                    <div class="flex flex-wrap gap-2" id="custom-allergies"></div>
+                    <div class="flex flex-col gap-2" id="custom-allergies"></div>
                 </div>
                 <input type="text" id="new-allergy" placeholder="Add new allergy" class="border rounded px-3 py-2">
-                <button type="button" onclick="addAllergyTag()" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Add</button>
+                <button type="button" onclick="addAllergyTag()" class="bg-[#e28413] hover:bg-[#bc7d30] text-white font-bold py-2 px-4 rounded">Add</button>
             </div>
 
             <!--
@@ -76,7 +81,7 @@
             </div>
             -->
 
-            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Save Changes</button>
+            <button type="submit" class="bg-[#e28413] hover:bg-[#bc7d30] text-white font-bold py-2 px-4 rounded">Save Changes</button> 
         </form>
     </div>
 </div>
@@ -84,6 +89,7 @@
 
 {% block script %}
 <script>
+    console.log(document.getElementById('disease_data').textContent)
     const customDiseasesDiv = document.getElementById("predefined-diseases");
     function addDiseaseTag() {
         const newDisease = document.getElementById("new-disease").value.trim();
@@ -114,7 +120,7 @@
             newAllergyElement.innerHTML = `
                 <input type="checkbox" id="allergy-${newAllergy}" name="allergies" value="${newAllergy}" class="mr-2" checked>
                 <label for="allergy-${newAllergy}" class="text-gray-700 text-sm">${newAllergy}</label>
-                <button type="button" onclick="deleteTag('allergy-${newAllergy}')" class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded transition duration-300 ml-2">Delete</button>
+                <button type="button" onclick="deleteTag('allergy-${newAllergy}')" class="bg-red-500 hover:bg-red-700 text-white text-xs py-1 px-2 rounded transition duration-300 ml-2">Delete</button>
             `;
             customAllergyDiv.appendChild(newAllergyElement);
             document.getElementById("new-allergy").value = "";
@@ -151,20 +157,25 @@
         }
     }
 
-    document.getElementById("new-disease").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            addDiseaseTag();
-        }
+    $(document).ready(function() {
+        $('form').on('submit', function(e) {
+            e.preventDefault();
+            // Prevent default form submission behavior 
+        });
+        $('#new-disease').on('keypress', function(e) {
+            if (e.which == 13) {
+                addDiseaseTag();
+                e.preventDefault(); // Prevent form submission
+            }
+        });
+        $('#new-allergy').on('keypress', function(e) {
+            if (e.which == 13) {
+                addAllergyTag();
+                e.preventDefault(); // Prevent form submission
+            }
+        });
     });
-    document.getElementById("new-allergy").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            addAllergyTag();
-        }
-    });
-    document.getElementById("new-favorite").addEventListener("keypress", function(event) {
-        if (event.key === "Enter") {
-            addFavoriteTag();
-        }
-    });
+    
+    
 </script>
 {% endblock script %}

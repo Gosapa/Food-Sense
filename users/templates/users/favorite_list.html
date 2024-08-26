@@ -1,16 +1,69 @@
 {% extends 'base.html' %}
 {% block body %}
 <div class="container mx-auto p-4 text-black">
-    <h1 class="text-4xl font-bold text-center mb-8">Your Favorite Recipes</h1>
+    <h1 class="text-4xl font-bold text-center mb-8 text-[#000022]">Your Favorite Recipes</h1>
 
-    {% for favorite in user.favorite_set.all %}
-    <div class="bg-gray-100 rounded-lg p-4 shadow-md mb-4">
-        <a href="{% url 'users:favorite' favorite.id %}">
-            <h2 class="text-2xl font-bold mb-2">{{ favorite.name | safe }}</h2>
-        </a>
-
-        <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Delete</button>
+    <div id="favorites-list" class="max-w-md mx-auto">
+        {% if user.favorite_set.all %}
+        {% for favorite in user.favorite_set.all %}
+        <div class="bg-gray-100 rounded-lg p-4 shadow-md mb-4 flex items-center justify-between" id="favorite-{{ favorite.id }}">
+            <div>
+                <a href="{% url 'users:favorite' favorite.id %}">
+                    <h2 class="text-2xl font-bold mb-2 text-[#000022]">{{ favorite.name | safe }}</h2>
+                </a>
+            </div>
+            <div>
+                <button data-favorite-id="{{ favorite.id }}" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="deleteFavorite(this)">Delete</button>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="text-center mt-8">
+            <p class="text-gray-600 text-lg">You don't have any saved recipes yet.</p>
+        </div>
+        {% endif %}
     </div>
-    {% endfor %}
 </div>
 {% endblock body %}
+
+{% block script %}
+<script>
+    async function deleteFavorite(button) {
+        const favoriteId = button.dataset.favoriteId;
+        const endpointURL = `{% url 'users:delete_favorite' %}?favorite_id=${favoriteId}`;
+        if (confirm("Are you sure you want to delete this recipe? You can't revert this action.")) {
+            try {
+                const response = await fetch(endpointURL, {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json",
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ 'favorite_id': favoriteId })
+                });
+                if (response.ok) {
+                    const favoriteElement = document.getElementById(`favorite-${favoriteId}`);
+                    if (favoriteElement) {
+                        favoriteElement.remove();
+                    }
+                    const favoritesList = document.getElementById('favorites-list');
+                    if (favoritesList.children.length === 0) {
+                        const emptyMessageDiv = document.createElement("div");
+                        emptyMessageDiv.classList.add("text-center", "mt-8");
+                        const emptyMessage = document.createElement("p");
+                        emptyMessage.textContent = "You don't have any saved recipes yet.";
+                        emptyMessage.classList.add("text-gray-600", "text-lg");
+                        emptyMessageDiv.appendChild(emptyMessage);
+                        favoritesList.appendChild(emptyMessageDiv);
+                    }
+                    console.log("Favorite deleted successfully!");
+                } else {
+                    console.error("Error deleting favorite:", response.status);
+                }
+            } catch (error) {
+                console.error("Error occurred:", error);
+            }
+        }
+    }
+</script>
+{% endblock script %}

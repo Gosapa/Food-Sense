@@ -2,6 +2,7 @@
 {% block body %}
 <div class="container mx-auto p-4">
     <h1 class="text-4xl font-bold text-center mb-8 text-[#000022]">Find any recipe you want!</h1>
+    <p class="text-gray-600 text-lg mb-4 text-center">Tell us what you're looking for! The more details you provide, the better our recommendations will be.</p>
     <div class="flex items-center mb-8">
         <input type="text" id="recipeInput" placeholder="Type any recipe..." class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
         <button id="sendRecipeButton" onclick="sendRecipe()" class="bg-[#e28413] hover:bg-[#bc7d30] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-2">Send</button>
@@ -84,7 +85,7 @@
 
     }
     async function saveRecipe() {
-        const endpointURL = '{% url "save_favorite" %}'
+        const endpointURL = '{% url "users:save_favorite" %}'
         try {
             const response = await fetch(endpointURL, {
                 method: 'POST',
@@ -92,11 +93,14 @@
                     "Content-Type": "application/json",
                     'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify({'item': document.getElementById("title").innerHTML, 'ingredients': document.getElementById('ingredients-list').innerHTML,'description': document.getElementById("result").innerHTML})
+                body: JSON.stringify({'item': document.getElementById("title").innerHTML, 'ingredients': document.getElementById('ingredients-list').innerHTML,'steps': document.getElementById("result").innerHTML})
             });
 
             if (response.ok) {
                 console.log("Recipe saved to favorites!");
+                alert("Recipe saved to favorites!");
+                saveRecipeBtn.disabled = true
+
                 // You might want to add some feedback to the user here (e.g., a message)
             } else {
                 console.error("Error saving recipe:", response.status);

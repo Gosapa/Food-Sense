@@ -13,8 +13,8 @@
         <p class="max-w-md text-2xl mt-4 text-left md:text-center">Smart food recommender that improves your lifestyle</p>
     </section>
 
-    <div class="flex flex-col justify-center items-center space-y-2">
-        <button id="getLocationButton" onclick="getLocation()" class="bg-[#e28413] hover:bg-[#e28413] text-white font-bold py-2 px-4 rounded-full transition transform ease-in-out duration-300 hover:scale-105 opacity-100 hover:opacity-100 disabled:opacity-50">Nearby Search</button>
+<div class="flex flex-col justify-center items-center space-y-2">
+            <button id="getLocationButton" onclick="getLocation()" class="bg-[#e28413] hover:bg-[#e28413] text-white font-bold py-2 px-4 rounded-full transition transform ease-in-out duration-300 hover:scale-105 opacity-100 hover:opacity-100 disabled:opacity-50">Nearby Search</button>
         <button id="getRecipeButton" onclick="getRecipe()" class="bg-[#e28413] hover:bg-[#e28413] text-white font-bold py-2 px-4 rounded-full transition transform ease-in-out duration-300 hover:scale-105 opacity-100 hover:opacity-100 disabled:opacity-50">Get Recipe</button>
         <button id="getIngredients" onclick="getIngredients()" class="bg-[#e28413] hover:bg-[#e28413] text-white font-bold py-2 px-4 rounded-full transition transform ease-in-out duration-300 hover:scale-105 opacity-100 hover:opacity-100 disabled:opacity-50">Ingredients</button>
         <!--
@@ -32,11 +32,26 @@
     const getRecipeButton = document.getElementById("getRecipeButton")
     const getIngredientsButton = document.getElementById("getIngredients")
     const loadingCircle = document.getElementById("loading-circle")
+    let isLoading = false; 
+
+    function handleLoadingState() {
+        if (isLoading) {
+            getLocationButton.disabled = true;
+            getRecipeButton.disabled = true;
+            getIngredientsButton.disabled = true;
+            loadingCircle.style.display = 'block';
+        } else {
+            getLocationButton.disabled = false;
+            getRecipeButton.disabled = false;
+            getIngredientsButton.disabled = false;
+            loadingCircle.style.display = 'none';
+        }
+    }
+
     async function getLocation() {
-        getLocationButton.disabled = true
-        getRecipeButton.disabled = true
-        getIngredientsButton.disabled = true
-        loadingCircle.style.display = 'block'
+        isLoading = true; 
+        handleLoadingState(); // Update loading state
+
         if (navigator.geolocation) {
             await navigator.geolocation.getCurrentPosition(showPosition);
         } else {
@@ -44,10 +59,14 @@
         }
     }
     async function getRecipe() {
+        isLoading = true; 
+        handleLoadingState(); // Update loading state
         window.location.href = "{% url 'recipe' %}"
     }
 
     async function getIngredients() {
+        isLoading = true; 
+        handleLoadingState(); // Update loading state
         window.location.href = "{% url 'ingredient' %}"
     }
     async function showPosition(position) {
@@ -58,6 +77,14 @@
         document.getElementById('longitudeInput').value = long;
     
         document.getElementById('locationForm').submit();
+        handleLoadingState(); // Update loading state
     }
+    onpageshow = async() => {
+        getLocationButton.disabled = false;
+        getRecipeButton.disabled = false;
+        getIngredientsButton.disabled = false;
+        loadingCircle.style.display = 'none';
+    }
+
 </script>
 {% endblock %}

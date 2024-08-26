@@ -1,25 +1,29 @@
+{% load static %}
 {% load socialaccount %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Food App</title>
+    <title>FoodSense</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <link rel="shortcut icon" type="image/png" href="{% static 'images/favicon.png' %}" >
 </head>
 <body class="bg-[#fbf5f3] min-h-screen text-[#000022] font-sans"> 
     <header id="navbar" class="bg-opacity-75 backdrop-blur-sm fixed top-0 left-0 w-full z-10 transition duration-300 ease-in-out">
         <section class="max-w-4xl mx-auto p-4 flex justify-between items-center">
-            <a href="{% url 'index' %}" class=" hover:opacity-90">
+            <a href="{% url 'index' %}" class="hover:opacity-90 flex items-center">
+                <img src="{% static 'images/logo-white.png' %}" alt="EDUQUEST Logo" class="h-10 mr-2"> 
                 <h1 class="text-3xl font-medium">
-                    🍔 Food Sense
+                    Food Sense
                 </h1>
             </a>
             <nav class="block space-x-6 text-lg " aria-label="main">
                 {% if not user.is_authenticated %}
                     <a href="{% provider_login_url 'google' %}" class="hover:opacity-90">Sign In with Google</a>
                 {% else %}
-                    <a href="{% url 'users:favorites' %}" class="hover:opacity-90">Favorites</a>
+                    <a href="{% url 'users:favorites_list' %}" class="hover:opacity-90">Favorites</a>
                     <a href="{% url 'users:profile' %}" class="hover:opacity-90">Profile</a>
                     <a href="{% url 'account_logout' %}" class="hover:opacity-90">Sign Out</a>
                 {% endif %}
