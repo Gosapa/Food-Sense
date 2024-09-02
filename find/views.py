@@ -40,11 +40,12 @@ def find(request):
                         'latitude': latitude,
                         'longitude': longitude,
                     },
-                    'radius': 500.0
+                    'radius': 2000.0
                 }
             },
             'rankPreference': 'DISTANCE'
         }
+
         result = requests.post(url, json=myBody, headers=myHeader).json()
         # print(type(result)) // DICTIONARY
         # print(result)
