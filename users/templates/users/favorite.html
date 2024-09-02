@@ -24,6 +24,8 @@
                 {{ item.steps | safe }}
             </div>
         </div>
+        <div class="flex justify-center"><a href="{% url "users:favorites_list"%}" class="bg-[#e28413] hover:bg-[#bc7d30] text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Back to list</a></div>
+        
     </div>
 </div>
 {% endblock body %}
